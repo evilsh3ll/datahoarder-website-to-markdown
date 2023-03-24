@@ -31,7 +31,12 @@ do
 		while read line; do
 		
 			# BUILD THE TITLE OF THE CURRENT THREAD
-			filename=$(curl -L -b "$cookies" "$line" | grep '<title>' | sed -e "s/<title>//"| sed -e "s/<\/title>//" | sed 's/^[ \t]*//;s/[ \t]*$//' | sed -r 's/\//\\/g'| sed -r 's/\://g');filename=${filename::-1}
+			filename=$(curl -L -b "$cookies" --connect-timeout 5 \
+    							 --max-time 10 \
+    							 --retry 5 \
+    							 --retry-delay 0 \
+    							 --retry-max-time 40 \
+							 "$line" | grep '<title>' | sed -e "s/<title>//"| sed -e "s/<\/title>//" | sed 's/^[ \t]*//;s/[ \t]*$//' | sed -r 's/\//\\/g'| sed -r 's/\://g');filename=${filename::-1}
 			echo -e "${CYAN}Scraping ${filename}..${NC}"
 
 			# JUMP FILES ALREADY DOWNLOADED IN THE PAST
@@ -42,18 +47,18 @@ do
 			
 			# CHECK IF THE LIKE BUTTON NEEDS TO BE CLICKED (IF THE FORUM HAS A LIKE BUTTON)
 			echo -e "${CYAN}Checking \"Thanks\" button..${NC}"
-			thanksbutton=$(curl -L -b "$cookies" "$line" | grep "action=thank" | grep "refresh"| sed -r 's/.*\<a href\=\"(.+)\" class\=\"thank_you_button_link\".*/\1/')
+			thanksbutton=$(curl -L -b "$cookies" --connect-timeout 5 --max-time 10 --retry 5 --retry-delay 0 --retry-max-time 40 "$line" | grep "action=thank" | grep "refresh"| sed -r 's/.*\<a href\=\"(.+)\" class\=\"thank_you_button_link\".*/\1/')
 			if [ -z "$thanksbutton" ]
 			then
 				echo -e "${CYAN}Button is already clicked!${NC}"
 			else
 				echo -e "${CYAN}Clicking button [$thanksbutton]..${NC}"
-				curl -b "$cookies" "$thanksbutton"
+				curl -b "$cookies" --connect-timeout 5 --max-time 10 --retry 5 --retry-delay 0 --retry-max-time 40 "$thanksbutton"
 			fi
 	  
 			# DOWNLOAD HTML
 			echo -e "${CYAN}Donwloading $line..${NC}"
-			curl -L -b "$cookies" "$line" -o "${filename}.html"
+			curl -L -b "$cookies" --connect-timeout 5 --max-time 10 --retry 5 --retry-delay 0 --retry-max-time 40 "$line" -o "${filename}.html"
 			
 			# CONVERT HTML TO MARKDOWN
 			echo -e "${CYAN}Converting "${filename}.html" to markdown..${NC}"
