@@ -8,7 +8,7 @@ This bash script takes cookies and a list of forum/webpage indexes as input, the
 - the script must be edited in order to be correctly executed
 
 ### Screen 🖼
-![image](https://user-images.githubusercontent.com/63223659/227187033-84182a7c-3581-4ffc-9ccf-fb343e09cad8.png)
+![image](https://i.imgur.com/gDKXN9T.png)
 
 ### Dependences 📜
 - [html2md](https://github.com/suntong/html2md)
