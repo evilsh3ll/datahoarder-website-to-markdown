@@ -30,35 +30,38 @@ do
 		# DOWNLOAD THE CURRENT THREAD OF THE CURRENT LIST
 		while read line; do
 		
+			# DOWNLOAD HTML
+			echo -e "${CYAN}Donwloading $line..${NC}"
+			topic_id=$(echo "$line" | awk -F 'topic=' '{print $2}')
+			curl -L -b "$cookies" "$line" --connect-timeout 5 \
+    						      --max-time 10 \
+    						      --retry 5 \
+    						      --retry-delay 0 \
+    						      --retry-max-time 40 \
+    						      -o "${topic_id}.html"
+			
 			# BUILD THE TITLE OF THE CURRENT THREAD
-			filename=$(curl -L -b "$cookies" --connect-timeout 5 \
-    							 --max-time 10 \
-    							 --retry 5 \
-    							 --retry-delay 0 \
-    							 --retry-max-time 40 \
-							 "$line" | grep '<title>' | sed -e "s/<title>//"| sed -e "s/<\/title>//" | sed 's/^[ \t]*//;s/[ \t]*$//' | sed -r 's/\//\\/g'| sed -r 's/\://g');filename=${filename::-1}
-			echo -e "${CYAN}Scraping ${filename}..${NC}"
+			echo -e "${CYAN}Scraping Title..${NC}"
+			filename=$(cat "${topic_id}.html" | grep '<title>' | sed -e "s/<title>//"| sed -e "s/<\/title>//" | sed 's/^[ \t]*//;s/[ \t]*$//' | sed -r 's/\//\\/g'| sed -r 's/\://g');filename=${filename::-1}
 
 			# JUMP FILES ALREADY DOWNLOADED IN THE PAST
 			if [ -f "${filename}_trimmed.md" ]; then
     				echo -e "${CYAN}File previously downloaded, jumping..${NC}"
+				gio trash "${topic_id}.html"
     				continue
 			fi
+			mv "${topic_id}.html" "${filename}.html"
 			
-			# CHECK IF THE LIKE BUTTON NEEDS TO BE CLICKED (IF THE FORUM HAS A LIKE BUTTON)
+			# CHECK IF THE LIKE BUTTON NEEDS TO BE CLICKED
 			echo -e "${CYAN}Checking \"Thanks\" button..${NC}"
-			thanksbutton=$(curl -L -b "$cookies" --connect-timeout 5 --max-time 10 --retry 5 --retry-delay 0 --retry-max-time 40 "$line" | grep "action=thank" | grep "refresh"| sed -r 's/.*\<a href\=\"(.+)\" class\=\"thank_you_button_link\".*/\1/')
+			thanksbutton=$(cat "${filename}.html" | grep "action=thank" | grep "refresh"| sed -r 's/.*\<a href\=\"(.+)\" class\=\"thank_you_button_link\".*/\1/')
 			if [ -z "$thanksbutton" ]
 			then
 				echo -e "${CYAN}Button is already clicked!${NC}"
 			else
 				echo -e "${CYAN}Clicking button [$thanksbutton]..${NC}"
-				curl -b "$cookies" --connect-timeout 5 --max-time 10 --retry 5 --retry-delay 0 --retry-max-time 40 "$thanksbutton"
+				curl -b "$cookies" "$thanksbutton"
 			fi
-	  
-			# DOWNLOAD HTML
-			echo -e "${CYAN}Donwloading $line..${NC}"
-			curl -L -b "$cookies" --connect-timeout 5 --max-time 10 --retry 5 --retry-delay 0 --retry-max-time 40 "$line" -o "${filename}.html"
 			
 			# CONVERT HTML TO MARKDOWN
 			echo -e "${CYAN}Converting "${filename}.html" to markdown..${NC}"
@@ -66,7 +69,7 @@ do
 			
 			# TRIM MARKDOWN CODE
 			echo -e "${CYAN}Trimming markdown code..${NC}"
-			sed '/clean the beginning of the document from HERE/,/to HERE/d' "${filename}.md" | tail -n +5 | sed '/clean the ending of the document from HERE/,/to HERE/d' | head -n -3 > "${filename}_trimmed.md"
+			sed '/Trimming the beginning of the page from HERE/,/to HERE/d' "${filename}.md" | tail -n +5 | sed '/Trimming the end of the page from HERE/,/to HERE/d' | head -n -3 > "${filename}_trimmed.md"
 			
 			# CLEAN LEFTOVERS
 			echo -e "${CYAN}Cleaning leftovers..${NC}"
