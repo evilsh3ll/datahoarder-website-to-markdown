@@ -8,7 +8,7 @@ All the scraped contents are uploaded to a remote git repository (you can store 
 - deleted files are moved to trashbin (I don't use **rm** but **gio trash**)
 - the script must be edited in order to be correctly executed
 
-### Screens 🖼
+### Screens 🖼️
 ![image](https://i.imgur.com/gDKXN9T.png)
 
 ### Dependences 📜
